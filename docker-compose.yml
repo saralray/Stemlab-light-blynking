@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  light-controller:
+    build: .
+    container_name: light-controller
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - ./list.json:/app/list.json:ro
+      - ./presets:/app/presets:ro
+      - ./static:/app/static:ro
+    restart: unless-stopped

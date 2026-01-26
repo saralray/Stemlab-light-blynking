@@ -11,6 +11,34 @@
         {
             "name": "WORKSHOP Light3",
             "entity_id": "light.workshop_ceiling_light_3"
+        },
+        {
+            "name": "AI ROOM Light1",
+            "entity_id": "light.ai_room_ceiling_light_1"
+        },
+        {
+            "name": "AI ROOM Light2",
+            "entity_id": "light.ai_room_ceiling_light_2"
+        },
+        {
+            "name": "AI ROOM Light3",
+            "entity_id": "light.ai_room_ceiling_light_3"
+        },
+        {
+            "name": "AI ROOM Light4",
+            "entity_id": "light.ai_room_ceiling_light_4"
+        },
+        {
+            "name": "CO WORKING SPACE Light1",
+            "entity_id": "light.co_working_space_ceiling_light_1"
+        },
+        {
+            "name": "CO WORKING SPACE Light2",
+            "entity_id": "light.co_working_space_ceiling_light_2"
+        },
+        {
+            "name": "CO WORKING SPACE Light3",
+            "entity_id": "light.co_working_space_ceiling_light_3"
         }
     ]
 }

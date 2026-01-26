@@ -27,69 +27,66 @@ def load_lights():
 
     return data["lights"]
 
-# ================== HOME ASSISTANT CALL ==================
+# ================== HA CALL ==================
 def call_service(service, payload):
-    url = f"{HA_URL}/api/services/light/{service}"
     try:
-        r = requests.post(url, json=payload, headers=HEADERS, timeout=5)
-        r.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"[ERROR] HA service failed: {e}")
+        requests.post(
+            f"{HA_URL}/api/services/light/{service}",
+            json=payload,
+            headers=HEADERS,
+            timeout=2
+        )
+    except Exception:
+        pass  # chaos mode: ignore errors
 
-# ================== BASIC BLINK ==================
-def blink_light(entity_id, cycles=3, delay=0.3):
-    for _ in range(cycles):
-        call_service("turn_on", {"entity_id": entity_id})
-        time.sleep(delay)
-        call_service("turn_off", {"entity_id": entity_id})
-        time.sleep(delay)
-
-# ================== CHAOS PATTERN ==================
-def chaos_blink(lights, rounds=20):
-    for _ in range(rounds):
-        count = random.randint(1, len(lights))
-        selected = random.sample(lights, count)
-
-        threads = []
-
-        for light in selected:
-            cycles = random.randint(1, 4)
-            delay = random.uniform(0.1, 0.5)
-
-            t = threading.Thread(
-                target=blink_light,
-                args=(light["entity_id"], cycles, delay),
-                daemon=True
-            )
-            t.start()
-            threads.append(t)
-
-        # บางรอบรอ บางรอบไม่รอ (chaos จริง)
-        if random.random() > 0.4:
-            for t in threads:
-                t.join()
-
+# ================== PER-LIGHT CHAOS ==================
+def light_chaos_worker(entity_id):
+    """
+    Each light runs its own chaos loop independently
+    """
+    while True:
+        # random idle before action
         time.sleep(random.uniform(0.05, 0.6))
+
+        mode = random.random()
+
+        if mode < 0.5:
+            # quick blink
+            call_service("turn_on", {"entity_id": entity_id})
+            time.sleep(random.uniform(0.05, 0.2))
+            call_service("turn_off", {"entity_id": entity_id})
+
+        elif mode < 0.8:
+            # flash (native HA)
+            call_service("turn_on", {
+                "entity_id": entity_id,
+                "flash": "short"
+            })
+
+        else:
+            # longer on glitch
+            call_service("turn_on", {"entity_id": entity_id})
+            time.sleep(random.uniform(0.2, 0.8))
+            call_service("turn_off", {"entity_id": entity_id})
 
 # ================== MAIN ==================
 def main():
     lights = load_lights()
     print(f"🔥 Loaded {len(lights)} lights")
+    print("💣 TRUE CHAOS MODE (independent lights) 💣")
 
-    if not lights:
-        raise RuntimeError("No lights found in list.json")
+    for light in lights:
+        threading.Thread(
+            target=light_chaos_worker,
+            args=(light["entity_id"],),
+            daemon=True
+        ).start()
 
     try:
         while True:
-            print("💥 CHAOS MODE 💥")
-            chaos_blink(
-                lights,
-                rounds=random.randint(15, 40)
-            )
-            time.sleep(random.uniform(1, 3))
-
+            time.sleep(1)  # keep main thread alive
     except KeyboardInterrupt:
-        print("\n🛑 Stopped by user")
+        print("\n🛑 Stopped")
 
 # ================== RUN ==================
 if __name__ == "__main__":

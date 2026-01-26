@@ -39,32 +39,30 @@ def call_service(service, payload):
     except Exception:
         pass  # chaos mode: ignore errors
 
+# ================== TURN OFF ALL ==================
+def turn_off_all(lights):
+    call_service("turn_off", {
+        "entity_id": [l["entity_id"] for l in lights]
+    })
+
 # ================== PER-LIGHT CHAOS ==================
 def light_chaos_worker(entity_id):
-    """
-    Each light runs its own chaos loop independently
-    """
     while True:
-        # random idle before action
         time.sleep(random.uniform(0.05, 0.6))
-
         mode = random.random()
 
         if mode < 0.5:
-            # quick blink
             call_service("turn_on", {"entity_id": entity_id})
             time.sleep(random.uniform(0.05, 0.2))
             call_service("turn_off", {"entity_id": entity_id})
 
         elif mode < 0.8:
-            # flash (native HA)
             call_service("turn_on", {
                 "entity_id": entity_id,
                 "flash": "short"
             })
 
         else:
-            # longer on glitch
             call_service("turn_on", {"entity_id": entity_id})
             time.sleep(random.uniform(0.2, 0.8))
             call_service("turn_off", {"entity_id": entity_id})
@@ -84,9 +82,11 @@ def main():
 
     try:
         while True:
-            time.sleep(1)  # keep main thread alive
+            time.sleep(1)
     except KeyboardInterrupt:
-        print("\n🛑 Stopped")
+        print("\n🛑 Stopping chaos...")
+        turn_off_all(lights)
+        print("💤 All lights OFF")
 
 # ================== RUN ==================
 if __name__ == "__main__":

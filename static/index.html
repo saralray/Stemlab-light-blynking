@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Light Presets</title>
+
+<style>
+:root {
+  --bg: #0f1220;
+  --card: #171a2e;
+  --accent: #6cf2c2;
+  --danger: #ff5c5c;
+  --text: #e8e8f0;
+  --muted: #9aa0c7;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1b1f3a, var(--bg));
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel {
+  background: var(--card);
+  padding: 24px;
+  border-radius: 16px;
+  width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+}
+
+h1 {
+  margin: 0 0 16px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+button {
+  padding: 14px 10px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  background: #23275a;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+button.active {
+  background: linear-gradient(135deg, #5eead4, #2dd4bf);
+  color: #04211a;
+  box-shadow: 0 0 0 2px rgba(108,242,194,.25);
+}
+
+button.stop {
+  background: linear-gradient(135deg, #ff7a7a, #ff4d4d);
+  color: #300;
+}
+
+.status {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+  <h1>💡 Presets</h1>
+
+  <div class="grid" id="buttons"></div>
+
+  <div class="status" id="status">Idle</div>
+</div>
+
+<script>
+const buttonsDiv = document.getElementById("buttons");
+const statusText = document.getElementById("status");
+
+let activePreset = null;
+
+async function api(path, body) {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: body ? { "Content-Type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : null
+  });
+  return res.json();
+}
+
+async function loadPresets() {
+  const res = await fetch("/presets");
+  const presets = await res.json();
+
+  presets.forEach(preset => {
+    const btn = document.createElement("button");
+    btn.innerText = preset.replace(/_/g, " ");
+    btn.onclick = () => togglePreset(preset, btn);
+    buttonsDiv.appendChild(btn);
+  });
+
+  await syncStatus();
+}
+
+async function togglePreset(preset, btn) {
+  if (activePreset === preset) {
+    await api("/stop");
+    activePreset = null;
+  } else {
+    await api("/start", { preset });
+    activePreset = preset;
+  }
+  updateUI();
+}
+
+async function syncStatus() {
+  const res = await fetch("/status");
+  const state = await res.json();
+  activePreset = state.running ? state.preset : null;
+  updateUI();
+}
+
+function updateUI() {
+  document.querySelectorAll("button").forEach(b => {
+    const name = b.innerText.replace(/ /g, "_");
+    b.classList.toggle("active", name === activePreset);
+  });
+
+  statusText.innerText = activePreset
+    ? `Running: ${activePreset}`
+    : "Idle";
+}
+
+loadPresets();
+</script>
+
+</body>
+</html>

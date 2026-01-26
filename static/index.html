@@ -6,11 +6,11 @@
 
 <style>
 :root {
-  --bg: #0f1220;
-  --card: #171a2e;
-  --accent: #6cf2c2;
-  --danger: #ff5c5c;
-  --text: #e8e8f0;
+  --bg: #0b0e1a;
+  --panel: #14182f;
+  --btn: #1f2450;
+  --glow: #6cf2c2;
+  --text: #eef0ff;
   --muted: #9aa0c7;
 }
 
@@ -21,68 +21,94 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #1b1f3a, var(--bg));
+  height: 100vh;
+  background: radial-gradient(circle at top, #1a1f40, var(--bg));
   color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* ===== PANEL ===== */
 .panel {
-  background: var(--card);
-  padding: 24px;
-  border-radius: 16px;
-  width: 360px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  width: 75vw;
+  height: 75vh;
+  background: var(--panel);
+  border-radius: 36px;
+  padding: 48px;                /* MORE BREATHING ROOM */
+  box-shadow: 0 40px 100px rgba(0,0,0,.6);
+  display: flex;
+  flex-direction: column;
 }
 
+/* ===== TITLE ===== */
 h1 {
-  margin: 0 0 16px;
+  margin: 0 0 36px;              /* MORE SPACE BELOW TITLE */
   text-align: center;
-  font-size: 1.2rem;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
 }
 
+/* ===== GRID ===== */
 .grid {
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 32px;                     /* BIGGER GAPS */
+  align-content: center;
 }
 
+/* ===== BUTTONS ===== */
 button {
-  padding: 14px 10px;
-  border-radius: 12px;
+  position: relative;
+  padding: 44px 24px;            /* FAT BUTTONS */
+  border-radius: 26px;
   border: none;
+  background: var(--btn);
+  color: var(--text);
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
   font-weight: 600;
   cursor: pointer;
-  background: #23275a;
-  color: var(--text);
-  transition: all 0.2s ease;
+  transition: transform .15s ease, filter .15s ease;
 }
 
 button:hover {
+  transform: translateY(-3px);
   filter: brightness(1.1);
-  transform: translateY(-1px);
 }
 
+/* ===== ACTIVE GLOW ===== */
 button.active {
-  background: linear-gradient(135deg, #5eead4, #2dd4bf);
-  color: #04211a;
-  box-shadow: 0 0 0 2px rgba(108,242,194,.25);
+  animation: glowPulse 1.8s ease-in-out infinite;
 }
 
-button.stop {
-  background: linear-gradient(135deg, #ff7a7a, #ff4d4d);
-  color: #300;
+button.active::after {
+  content: "";
+  position: absolute;
+  inset: -12px;                  /* BIGGER GLOW RING */
+  border-radius: 32px;
+  box-shadow:
+    0 0 26px var(--glow),
+    0 0 70px rgba(108,242,194,.6);
+  pointer-events: none;
 }
 
+@keyframes glowPulse {
+  0%   { box-shadow: 0 0 0 rgba(0,0,0,0); }
+  50%  { box-shadow: 0 0 40px rgba(108,242,194,.4); }
+  100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+}
+
+/* ===== STATUS ===== */
 .status {
-  margin-top: 14px;
+  margin-top: 36px;              /* CLEAR SEPARATION */
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,.08);
   text-align: center;
-  font-size: 0.85rem;
+  font-size: clamp(1.1rem, 1.6vw, 1.3rem);
   color: var(--muted);
 }
 </style>
+
 </head>
 
 <body>
@@ -98,7 +124,6 @@ button.stop {
 <script>
 const buttonsDiv = document.getElementById("buttons");
 const statusText = document.getElementById("status");
-
 let activePreset = null;
 
 async function api(path, body) {
@@ -117,14 +142,14 @@ async function loadPresets() {
   presets.forEach(preset => {
     const btn = document.createElement("button");
     btn.innerText = preset.replace(/_/g, " ");
-    btn.onclick = () => togglePreset(preset, btn);
+    btn.onclick = () => togglePreset(preset);
     buttonsDiv.appendChild(btn);
   });
 
-  await syncStatus();
+  syncStatus();
 }
 
-async function togglePreset(preset, btn) {
+async function togglePreset(preset) {
   if (activePreset === preset) {
     await api("/stop");
     activePreset = null;

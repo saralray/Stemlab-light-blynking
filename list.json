@@ -1,0 +1,16 @@
+{
+    "lights": [
+        {
+            "name": "WORKSHOP Light1",
+            "entity_id": "light.workshop_ceiling_light_1"
+        },
+        {
+            "name": "WORKSHOP Light2",
+            "entity_id": "light.workshop_ceiling_light_2"
+        },
+        {
+            "name": "WORKSHOP Light3",
+            "entity_id": "light.workshop_ceiling_light_3"
+        }
+    ]
+}
